@@ -1,0 +1,502 @@
+
+#Store SOP terms in list
+str=input('Enter expression ')
+#space
+str.strip()
+termslist=str.split('+')
+
+#Count number of variables
+termlen = len(termslist[0])
+comma = termslist[0].count("'")
+var = termlen-comma
+
+def convertbinary(term):
+    binary = []
+    term = term.strip()
+    count = 0
+
+    for literal in term:
+        if literal == "'":
+            count = count +1
+            continue
+
+        if count < len(term)-1 and term [count + 1] == "'":
+            binary.append('0')
+            count=count+1
+
+        else:
+            binary.append('1')
+            count = count +1
+
+
+    count1=0
+
+    for digit in binary:
+        digit = int(digit)
+        binary[count1]=digit
+        count1+=1
+
+    return binary
+
+
+binarylist=[]
+
+for term in termslist:
+    binarylist.append(convertbinary(term))
+
+#Binary to decimal
+def convertdecimal(binary):
+    decimal =0
+    count=0
+
+    for bit in binary:
+        decimal = decimal + bit*(2**(len(binary)-count-1))
+        count+=1
+
+    return decimal
+
+
+decimallist=[]
+
+for binary in binarylist:
+    decimallist.append(convertdecimal(binary))
+
+kmap=[['0','0','0','0'],['0','0','0','0'],['0','0','0','0'],['0','0','0','0']]
+
+
+#Decimal to coordinates in kmap
+def coordinates(decimal):
+    x = decimal//4
+    y = decimal-4*x
+
+    if y == 2:
+        y =3
+    elif y == 3:
+        y=2
+
+    if x==3:
+        x=2
+    elif x==2:
+        x=3
+
+    return (x,y)
+
+
+coordinateslist=[]
+for decimal in decimallist:
+    coordinateslist.append(coordinates(decimal))
+
+def coord_dec(row,col):
+    if row == 3:
+        row = 2
+
+    elif row == 2:
+        row = 3
+
+    if col == 3:
+        col = 2
+
+    elif col == 2:
+        col = 3
+
+    decimal = col*4 + row
+
+    return decimal
+    
+
+def fillkmap(decimal,kmap):
+    y=coordinates(decimal)[1]
+    x=coordinates(decimal)[0]
+    kmap[y][x]='1'
+    
+ 
+for term in termslist:
+    binary = convertbinary(term)
+    decimal = convertdecimal(binary)
+    fillkmap(decimal,kmap)
+
+print()
+print("AB on horizontal and CD on vertical")
+print("The Kmap is")
+for i in kmap:
+    for j in i:
+        print(j,end = ' ')
+    print()
+
+print()
+
+#Group of 16
+ctr = 1
+
+for i in range(4):
+    for j in range(4):
+        if int(kmap[i][j]) != 1:
+            ctr = 0
+            break
+
+if ctr != 0:
+    print(1)
+
+#Group of 8
+min_exp = []    #This list stores the terms in minimized expression
+
+#For row wise grouping
+for i in range(4):
+    ctr = 0
+    for j in range(4):
+
+        if abs(int(kmap[i][j])) == 1 and abs(int(kmap[i-1][j])) == 1:
+            ctr += 2
+
+    if ctr == 8:
+        for j in range(4):
+            kmap[i][j] = -1
+            kmap[i-1][j] = -1
+
+        if i == 0:
+            min_exp.append("D'")
+
+        elif i == 1:
+            min_exp.append("C'")
+
+        elif i == 2:
+            min_exp.append("D")
+
+        else:
+            min_exp.append("C")
+
+#print(kmap)
+
+#for column wise groups
+for j in range(4):
+    ctr = 0
+    for i in range(4):
+        if abs(int(kmap[i][j])) == 1 and abs(int(kmap[i][j-1])) == 1:
+            ctr += 2
+
+    if ctr == 8:
+        for i in range(4):
+            kmap[i][j] = -1
+            kmap[i][j-1] = -1
+        
+        if j == 0 :
+            min_exp.append("B'")
+
+        elif j == 1:
+            min_exp.append("A'")
+
+        elif j == 2:
+            min_exp.append("B")
+
+        else:
+            min_exp.append("A")
+
+#print(kmap)
+#print(min_exp)
+#Group of 8 completed
+
+
+
+#Group of 4
+
+#checking rectangular group of 4
+
+#Row wise check
+for i in range(len(kmap)):
+    ctr = 0
+    to_group = 0
+    
+    for j in range(4):
+        if abs(int(kmap[i][j])) == 1:
+            ctr += 1
+    
+        if int(kmap[i][j]) == 1:
+            to_group = 1 
+    
+    if ctr == 4 and to_group == 1:
+        for j in range(4):
+            kmap[i][j] = -1
+        
+        if i == 0:
+            min_exp.append("C'D'")
+
+        if i == 1:
+            min_exp.append("C'D")
+
+        if i == 2:
+            min_exp.append("CD")
+
+        if i == 3:
+            min_exp.append("CD'")
+
+#Column wise check
+for j in range(4):
+    ctr = 0
+    to_group = 0
+
+    for i in range(4):
+        if abs(int(kmap[i][j])) == 1:
+            ctr += 1
+
+        if int(kmap[i][j]) == 1:
+            to_group = 1
+
+    if ctr == 4 and to_group == 1:
+        for i in range(4):
+            kmap[i][j] = -1
+        
+        if j == 0:
+            min_exp.append("A'B'")
+
+        if j == 1:
+            min_exp.append("A'B")
+
+        if j == 2:
+            min_exp.append("AB")
+
+        if j == 3:
+            min_exp.append("AB'")
+
+#Square wise grouping
+for i in range(4):
+    ctr = 0
+    to_group = 0
+    
+    for j in range(4):
+        if abs(int(kmap[i][j])) == 1 and abs(int(kmap[i-1][j-1])) == 1 and abs(int(kmap[i][j-1])) == 1 and abs(int(kmap[i-1][j])) == 1:
+            ctr = 1
+
+        if (int(kmap[i][j])) == 1 or (int(kmap[i-1][j-1])) == 1 or (int(kmap[i][j-1])) == 1 or (int(kmap[i-1][j])) == 1:
+            to_group = 1
+
+      #  print("ctr tg",ctr,to_group)
+        if ctr == 1 and to_group == 1:
+            kmap[i][j] = -1
+            kmap[i][j-1] = -1
+            kmap[i-1][j] = -1
+            kmap[i-1][j-1] = -1
+
+            tupl = ((i,j),(i,j-1),(i-1,j),(i-1,j-1))
+            binaries = []
+
+            for k in tupl:
+                row,col = k[0],k[1]
+                if row == -1:
+                    row = 3
+
+                if col == -1:
+                    col = 3
+                #converting into decimal and then to binary
+
+                if row == 2:
+                    row = 3
+
+                elif row == 3:
+                    row = 2
+
+                if col == 2:
+                    col = 3
+
+                elif col==3:
+                    col = 2
+
+                decimal = col*4 + row
+                binary = bin(decimal)[2:]
+              #  print("decimal BINARY",decimal,binary)
+                binary = "0"*(4 - len(binary)) + binary
+               # print(binary)
+                binaries.append(binary)
+
+            term = ''
+            for k in range(len(binaries)):
+                char = binaries[0][k]
+                ctr = 0
+                for l in range(4):
+                    if int(binaries[l][k]) == int(char):
+                        ctr += 1
+
+                if ctr == 4:
+                    if int(char) == 0:
+                        if k == 0:
+                            term += "A'"
+
+                        elif k == 1:
+                            term += "B'"
+
+                        elif k == 2:
+                            term += "C'"
+
+                        elif k ==3:
+                            term += "D'"
+
+                    elif int(char) == 1:
+                        if k == 0:
+                            term += "A"
+
+                        elif k == 1:
+                            term += "B"
+
+                        elif k == 2:
+                            term += "C"
+
+                        else:
+                            term += "D"
+
+                    #print("TERm",term)
+
+            min_exp.append(term)
+
+#Group of 4  completed           
+ 
+#print(min_exp)
+
+#Group of 2
+for coordinate in coordinateslist:
+    row = coordinate[1]
+    col = coordinate[0]
+
+    if row == 3:
+        rowp = 0
+
+    else:
+        rowp = row + 1
+
+    if col == 3:
+        colp = 0
+
+    else:
+        colp = col + 1
+    
+    if int(kmap[row][col]) == 1:
+        rowo,colo = -10,-10
+        
+        if abs(int(kmap[row - 1][col])) == 1:
+            kmap[row - 1][col] = -1
+            kmap[row][col] = -1
+            rowo,colo = row-1,col
+            case = 1
+
+        elif abs(int(kmap[row][col - 1])) == 1:
+            kmap[row][col - 1] = -1
+            kmap[row][col] = -1
+            rowo,colo = row,col -1
+            case = 2
+
+        elif abs(int(kmap[rowp][col])) == 1:
+            kmap[rowp][col] = -1
+            kmap[row][col] = -1
+            rowo,colo = rowp,col
+            case = 3
+
+        elif abs(int(kmap[row][colp])) == 1:
+            kmap[row][col] = -1
+            kmap[row - 1][colp] = -1
+            rowo,colo = row,colp
+            case = 4
+
+        if rowo == -1:
+            rowo = 4
+
+        if colo == -1:
+            colo = 4
+
+        if rowo != -10 and colo!= -10:
+            binaries = []
+            
+            binary = bin(coord_dec(row,col))[2:]
+            binary = "0"*(4 - len(binary)) + binary
+            binaries.append(binary)
+            
+            binary = bin(coord_dec(rowo,colo))[2:]
+            binary = "0"*(4 - len(binary)) + binary
+            binaries.append(binary)
+            
+            term = ''
+            for i in range(4):
+                ctr = 0
+                char = binaries[0][i]
+                
+                for j in range(2):
+                    #print("binji",binaries[j][i])
+                    if int(binaries[j][i]) == int(char):
+                        ctr += 1
+
+                if ctr == 2:
+                    if int(char) == 0:                 
+                        if i == 0:
+                            term += "A'"
+
+                        elif i == 1:
+                            term += "B'"
+
+                        elif i == 2:
+                            term += "C'"
+
+                        elif i ==3:
+                            term += "D'"
+
+                    elif int(char) == 1:
+                        if i == 0:
+                            term += "A"
+
+                        elif i == 1:
+                            term += "B"
+
+                        elif i == 2:
+                            term += "C"
+
+                        else:
+                            term += "D"
+
+            min_exp.append(term)
+
+#Prime Implicants
+for i in range(len(kmap)):
+    for j in range(len(kmap)):
+        char = kmap[i][j]
+        
+        if int(char) == 1:
+            dec = coord_dec(i,j)
+            binary = bin(dec)[2:]
+            binary = '0'*(4 - len(binary)) + binary
+            term = ''
+            
+            for k in range(len(binary)):
+                if int(binary[k]) == 0:
+                    if k == 0:
+                        term += "A'"
+
+                    elif k == 1:
+                        term += "B'"
+
+                    elif k == 2:
+                        term += "C'"
+
+                    elif k == 3:
+                        term += "D'"
+
+                if int(binary[k]) == 1:
+                    if k == 0:
+                        term += "A"
+
+                    elif k == 1:
+                        term += "B"
+
+                    elif k == 2:
+                        term += "C"
+
+                    elif k == 3:
+                        term += "D"
+
+            min_exp.append(term)
+
+#print(min_exp)
+
+print("The minimized expression is")
+for i in min_exp:
+    if i == min_exp[len(min_exp) - 1]:
+        print(i)
+    else:
+        print(i,end = ' + ')
+print()    
+print("NOTE: ' represents complement")
